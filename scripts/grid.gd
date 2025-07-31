@@ -13,17 +13,17 @@ class triangle_cell:
 	var state : int
 
 var CELL_SIZE := 2
-var GRID_RADIUS := 10
+var GRID_RADIUS := 15
 var GRID_HEIGHT := 0.5
 var CENTER_TILE_EUCLIDIC := Vector3(0,0,0)
 var CENTER_TILE_CUBIC := Vector3(0,0,0)
 var CUBIC_DIRECTION := {	
-	0: Vector3(0, -1, 0),	# top
-	1: Vector3(-1, 0, 0),	# top right
-	2: Vector3(-1, 1, 0),	# bottom right
-	3: Vector3(0, 1, 0),	# bottom
-	4: Vector3(1, 0, 0),	# bottom left
-	5: Vector3(1, -1, 0)	# top left
+	0: Vector3(0, -1,  1),	# top
+	1: Vector3(1, -1,  0),	# top right
+	2: Vector3(1,  0, -1),	# bottom right
+	3: Vector3(0,  1,  -1),	# bottom
+	4: Vector3(-1, 1,  0),	# bottom left
+	5: Vector3(-1,  0,  1)	# top left
 }
 var TILE_ROTATION_VALUE := {
 	0:    CUBIC_DIRECTION[0],	# facing top
@@ -34,8 +34,8 @@ var TILE_ROTATION_VALUE := {
 	60:   CUBIC_DIRECTION[5]	# facing top left
 }
 
-var hexgrid = {}
-var trigrid = {}
+var hexgrid = {} # in cube coords
+var trigrid = {} # in euclidic coords
 
 func _ready() -> void:
 	initialize_grid()
@@ -103,6 +103,7 @@ func get_trigrid_array_mesh() -> ArrayMesh:
 	trigrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
 	return trigrid_array_mesh
 
+
 # ------------------- helper functions -------------------
 
 
@@ -111,9 +112,16 @@ func euclidic_snap_to_hexgrid(point) -> Vector3:
 	var point_new : Vector3 = Grid.cubic_to_euclidic(cube_coordinate_rounded)
 	return Vector3(point_new.x, point.y, point_new.z)
 	
-func euclidic_snap_to_trigrid(point) -> Vector3:
-	#TODO find nearest trigrid element (instead of snapping to hexgrid ._.)
+func euclidic_snap_to_trigrid(point : Vector3) -> Vector3:
 	return euclidic_snap_to_hexgrid(point)
+	# TODO fix this
+	var min_dist = INF
+	var closest_tri : Vector3 = Vector3.ZERO
+	for tri in trigrid:
+		var dist = point.distance_to(tri)
+		if dist<min_dist:
+			closest_tri = tri
+	return closest_tri
 	
 func get_euclicdic_hexagon_corner(euclidic_center : Vector3, direction : int) -> Vector3:
 	var angle_degree = 60 * direction + 30
@@ -162,11 +170,11 @@ func cubic_round(frac_hexagon: Vector3) -> Vector3:
 
 func cubic_ring(center : Vector3, radius : int):
 	var results = []
-	var hexagon = center + CUBIC_DIRECTION[4] * radius
+	var point = center + CUBIC_DIRECTION[4] * radius
 	for i in range(6):
 		for j in range(radius):
-			results.append(hexagon)
-			hexagon = hexagon + CUBIC_DIRECTION[i]
+			results.append(point)
+			point = point + CUBIC_DIRECTION[i]
 	return results
 
 func cubic_spiral(center : Vector3, radius : int):

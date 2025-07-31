@@ -30,7 +30,11 @@ func _process(_delta):
 		preview_instance.global_position = snapped_hit
 		
 		if Input.is_action_just_pressed("mouse_left"):
-			_spawn_instance(snapped_hit)
+			_spawn_instance(snapped_hit, preview_instance.rotation.y)
+		if Input.is_action_just_pressed("mouse_wheel_down"):
+			preview_instance.rotate_y(deg_to_rad(60))
+		if Input.is_action_just_pressed("mouse_wheel_up"):
+			preview_instance.rotate_y(deg_to_rad(-60))
 
 func _is_mouse_over_ui_rect(mouse_pos : Vector2) -> bool:
 	var hovered = get_viewport().gui_get_hovered_control()
@@ -56,11 +60,11 @@ func _create_preview_instance():
 
 	add_child(preview_instance)
 
-func _spawn_instance(position: Vector3):
+func _spawn_instance(position: Vector3, rotation : float):
 	if !scene_to_spawn:
 		push_warning("scene_to_spawn is not assigned.")
 		return
-
 	var instance = scene_to_spawn.instantiate()
 	get_tree().current_scene.add_child(instance)
 	instance.global_position = position
+	instance.global_rotation.y = rotation

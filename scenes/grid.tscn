@@ -36,7 +36,7 @@ script = ExtResource("4_6r0t4")
 
 [node name="GridToggleControl" type="Control" parent="."]
 layout_mode = 3
-offset_right = 207.0
+offset_right = 539.0
 offset_bottom = 135.0
 
 [node name="Hexgrid" type="Control" parent="GridToggleControl"]
@@ -81,6 +81,11 @@ offset_top = 35.0
 offset_right = 88.0
 offset_bottom = 58.0
 text = "Trigrid"
+
+[node name="Hexagon" type="Control" parent="GridToggleControl"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 
 [connection signal="toggled" from="GridToggleControl/Hexgrid/HexgridCheckButton" to="." method="_on_hexgrid_check_button_toggled"]
 [connection signal="toggled" from="GridToggleControl/Trigrid/TrigridCheckButton" to="." method="_on_trigrid_check_button_toggled"]

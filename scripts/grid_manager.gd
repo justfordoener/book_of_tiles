@@ -13,12 +13,13 @@ extends Node
 
 var HEXGRID_COLOR := Color("6B5E49")
 var TRIGRID_COLOR := Color("586B50")
+
+func ready() -> void:
+	hexgrid_activated = false
+	trigrid_activated = false
 	
 func _on_hexgrid_check_button_toggled(toggled_on: bool) -> void:
 	hexgrid_mesh.mesh = Grid.get_hexgrid_array_mesh()
-	#if toggled_on and trigrid_snap_tool.activated:
-	#	_on_trigrid_check_button_toggled(false)
-	#	trigrid_check_button.set_pressed_no_signal(false)
 	hexgrid_snap_tool.activated = toggled_on
 	hexgrid_activated = toggled_on
 	_configure_mesh(hexgrid_mesh, HEXGRID_COLOR)
@@ -26,9 +27,6 @@ func _on_hexgrid_check_button_toggled(toggled_on: bool) -> void:
 
 func _on_trigrid_check_button_toggled(toggled_on: bool) -> void:
 	trigrid_mesh.mesh = Grid.get_trigrid_array_mesh()
-	#if toggled_on and hexgrid_snap_tool.activated:
-	#	_on_hexgrid_check_button_toggled(false)
-	#	hexgrid_check_button.set_pressed_no_signal(false)
 	trigrid_snap_tool.activated = toggled_on
 	trigrid_activated = toggled_on
 	_configure_mesh(trigrid_mesh, TRIGRID_COLOR)
