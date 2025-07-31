@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bbmqssnigglq0"]
+
+[ext_resource type="PackedScene" uid="uid://brggp4tobw38g" path="res://Models/triangle.glb" id="1_idvkf"]
+
+[node name="triangle" instance=ExtResource("1_idvkf")]
+transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 0, 0, 0)
