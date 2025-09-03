@@ -1,12 +1,15 @@
 extends Node
 
-@export var scene_to_spawn: PackedScene
+@export var hexagon_tile : PackedScene
+@export var triangle_tile : PackedScene
 @export var camera_path: NodePath  # Assign your Camera3D here in the editor
 
+var scene_to_spawn: PackedScene
 var preview_instance: Node3D
 var camera: Camera3D
 
 func _ready():
+	scene_to_spawn = hexagon_tile
 	camera = get_node(camera_path) as Camera3D
 	_create_preview_instance()
 
@@ -26,7 +29,11 @@ func _process(_delta):
 	var hit = plane.intersects_ray(ray_origin, ray_dir)
 	
 	if hit != null:
-		var snapped_hit = Grid.euclidic_snap_to_hexgrid(hit)
+		var snapped_hit
+		if Grid.dual_grid_state == 0:
+			snapped_hit = Grid.euclidic_snap_to_hexgrid(hit)
+		if Grid.dual_grid_state == 1:
+			snapped_hit = Grid.euclidic_snap_to_trigrid(hit)
 		preview_instance.global_position = snapped_hit
 		
 		if Input.is_action_just_pressed("mouse_left"):
@@ -39,6 +46,16 @@ func _process(_delta):
 func _is_mouse_over_ui_rect(mouse_pos : Vector2) -> bool:
 	var hovered = get_viewport().gui_get_hovered_control()
 	return hovered != null and hovered.get_global_rect().has_point(mouse_pos)
+	
+func recreate_preview_instance():
+	preview_instance.queue_free()
+	if Grid.dual_grid_state == 0:
+		scene_to_spawn = hexagon_tile
+		print("DEBUG: assigned hexagon tile")
+	else:
+		scene_to_spawn = triangle_tile
+		print("DEBUG: assigned triangle tile")
+	_create_preview_instance()
 	
 func _create_preview_instance():
 	if !scene_to_spawn:

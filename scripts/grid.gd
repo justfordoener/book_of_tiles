@@ -33,6 +33,7 @@ var TILE_ROTATION_VALUE := {
 	120:  CUBIC_DIRECTION[4],	# facing bottom left
 	60:   CUBIC_DIRECTION[5]	# facing top left
 }
+var dual_grid_state = 0 # 0 = hexgrid, 1 = trigrid
 
 var hexgrid = {} # in cube coords
 var trigrid = {} # in euclidic coords
@@ -113,15 +114,16 @@ func euclidic_snap_to_hexgrid(point) -> Vector3:
 	return Vector3(point_new.x, point.y, point_new.z)
 	
 func euclidic_snap_to_trigrid(point : Vector3) -> Vector3:
-	return euclidic_snap_to_hexgrid(point)
-	# TODO fix this
+	var hexagon_center = euclidic_snap_to_hexgrid(point)
 	var min_dist = INF
-	var closest_tri : Vector3 = Vector3.ZERO
-	for tri in trigrid:
-		var dist = point.distance_to(tri)
-		if dist<min_dist:
-			closest_tri = tri
-	return closest_tri
+	var closest_corner : Vector3 = Vector3.ZERO
+	for direction in range(6):
+		var corner = get_euclicdic_hexagon_corner(hexagon_center, direction)
+		var dist = point.distance_to(corner)
+		if dist < min_dist:
+			closest_corner = corner
+			min_dist = dist
+	return closest_corner + Vector3(0, 0.5, 0)
 	
 func get_euclicdic_hexagon_corner(euclidic_center : Vector3, direction : int) -> Vector3:
 	var angle_degree = 60 * direction + 30
@@ -132,6 +134,9 @@ func get_euclicdic_hexagon_corner(euclidic_center : Vector3, direction : int) ->
 		CELL_SIZE * sin(angle_radian)
 	)
 
+func get_cubic_hexagon_corner(cubic_center : Vector3, direction : int) -> Vector3:
+	return Vector3.ZERO
+	
 func cubic_distance_from_to(from: Vector3, to: Vector3):
 	var distance : Vector3 = Vector3.ZERO
 	distance.x = to.x - from.x

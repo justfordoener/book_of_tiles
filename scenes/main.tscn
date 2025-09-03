@@ -1,26 +1,30 @@
-[gd_scene load_steps=6 format=3 uid="uid://c80oiohis4dk6"]
+[gd_scene load_steps=8 format=3 uid="uid://c80oiohis4dk6"]
 
-[ext_resource type="Script" uid="uid://cncxn7dwvp52f" path="res://scenes/tile_placement.gd" id="1_jyhfs"]
+[ext_resource type="Script" uid="uid://cncxn7dwvp52f" path="res://scripts/tile_placement.gd" id="1_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://dshxsrgqjwt67" path="res://scenes/grid.tscn" id="1_o5qli"]
+[ext_resource type="Script" uid="uid://cwimjfawhl5tk" path="res://scenes/main_manager.gd" id="1_o6xl0"]
 [ext_resource type="PackedScene" uid="uid://fb3dfu5xud78" path="res://scenes/wall_curve.tscn" id="2_0wfyh"]
 [ext_resource type="PackedScene" uid="uid://cm3318b78fsrh" path="res://Models/wall_curve.glb" id="2_tbgi4"]
-[ext_resource type="Script" uid="uid://bg6hpcnpykqce" path="res://scenes/camera.gd" id="3_sugp2"]
+[ext_resource type="Script" uid="uid://bg6hpcnpykqce" path="res://scripts/camera.gd" id="3_sugp2"]
+[ext_resource type="PackedScene" uid="uid://brggp4tobw38g" path="res://Models/triangle.glb" id="3_tefeu"]
 
 [node name="Main" type="Node"]
+script = ExtResource("1_o6xl0")
 
 [node name="TilePlacement" type="Node" parent="."]
 script = ExtResource("1_jyhfs")
-scene_to_spawn = ExtResource("2_tbgi4")
+hexagon_tile = ExtResource("2_tbgi4")
+triangle_tile = ExtResource("3_tefeu")
 camera_path = NodePath("../Camera/Camera3D")
 
 [node name="Grid" parent="." instance=ExtResource("1_o5qli")]
 
 [node name="Light" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.3525388, 2.2865496, 1.7496634)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35254, 2.28655, 1.74966)
 visible = false
 
 [node name="Light2" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.330703, 6.886328, -1.2543745)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3307, 6.88633, -1.25437)
 omni_range = 22.686
 
 [node name="wall_curve" parent="." instance=ExtResource("2_0wfyh")]
@@ -30,5 +34,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 script = ExtResource("3_sugp2")
 
 [node name="Camera3D" type="Camera3D" parent="Camera"]
-transform = Transform3D(1, 0, 0, 0, 0.7071068, 0.7071068, 0, -0.7071068, 0.7071068, 0, 10, 10)
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 10, 10)
 current = true
