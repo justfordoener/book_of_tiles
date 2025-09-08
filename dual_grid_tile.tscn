@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://dyodgw3q3vn04"]
+
+[ext_resource type="PackedScene" uid="uid://qsnvjcclenvk" path="res://Models/dual_grid_tile.glb" id="1_nthqb"]
+
+[node name="dual_grid_tile" instance=ExtResource("1_nthqb")]

@@ -1,7 +1,8 @@
 extends Node
 
-@export var hexagon_tile : PackedScene
-@export var triangle_tile : PackedScene
+@export var dual_grid_tile : PackedScene
+@export var tri_grid_tile : PackedScene
+@export var play_grid_tile : PackedScene
 @export var camera_path: NodePath  # Assign your Camera3D here in the editor
 
 var scene_to_spawn: PackedScene
@@ -9,7 +10,7 @@ var preview_instance: Node3D
 var camera: Camera3D
 
 func _ready():
-	scene_to_spawn = hexagon_tile
+	scene_to_spawn = dual_grid_tile
 	camera = get_node(camera_path) as Camera3D
 	_create_preview_instance()
 
@@ -30,9 +31,9 @@ func _process(_delta):
 	
 	if hit != null:
 		var snapped_hit
-		if Grid.dual_grid_state == 0:
-			snapped_hit = Grid.euclidic_snap_to_hexgrid(hit)
-		if Grid.dual_grid_state == 1:
+		if Grid.grid_state == 0:
+			snapped_hit = Grid.euclidic_snap_to_dualgrid(hit)
+		if Grid.grid_state == 1:
 			snapped_hit = Grid.euclidic_snap_to_trigrid(hit)
 		preview_instance.global_position = snapped_hit
 		
@@ -49,21 +50,20 @@ func _is_mouse_over_ui_rect(mouse_pos : Vector2) -> bool:
 	
 func recreate_preview_instance():
 	preview_instance.queue_free()
-	if Grid.dual_grid_state == 0:
-		scene_to_spawn = hexagon_tile
-		print("DEBUG: assigned hexagon tile")
+	if Grid.grid_state == 0:
+		scene_to_spawn = dual_grid_tile
+		print("DEBUG: assigned dualagon tile")
 	else:
-		scene_to_spawn = triangle_tile
+		scene_to_spawn = tri_grid_tile
 		print("DEBUG: assigned triangle tile")
 	_create_preview_instance()
 	
 func _create_preview_instance():
 	if !scene_to_spawn:
-		push_warning("scene_to_spawn is not assigned.")
+		push_warning("WARNING: scene_to_spawn is not assigned.")
 		return
 	preview_instance = scene_to_spawn.instantiate()
 	preview_instance.visible = true
-	preview_instance.name = "PreviewInstance"
 
 	# Apply transparency to all MeshInstance3Ds in the preview
 	var material := StandardMaterial3D.new()

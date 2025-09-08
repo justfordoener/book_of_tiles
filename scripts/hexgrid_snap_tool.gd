@@ -16,7 +16,7 @@ func _update_selected_node() -> void:
 		if selected_node == null:
 			return
 		var point : Vector3 = Vector3(selected_node.global_position.x, selected_node.global_position.y, selected_node.global_position.z)
-		selected_node.global_position = Grid.euclidic_snap_to_hexgrid(point)
+		selected_node.global_position = Grid.euclidic_snap_to_dualgrid(point)
 		
 func _set_selected_node() -> void:
 	if Engine.is_editor_hint():

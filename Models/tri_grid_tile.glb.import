@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://brggp4tobw38g"
-path="res://.godot/imported/triangle.glb-df002f66a3c1a3b809dce2866e9c658e.scn"
+path="res://.godot/imported/tri_grid_tile.glb-20ad72b0527e23eae9533cefc625d21e.scn"
 
 [deps]
 
-source_file="res://Models/triangle.glb"
-dest_files=["res://.godot/imported/triangle.glb-df002f66a3c1a3b809dce2866e9c658e.scn"]
+source_file="res://Models/tri_grid_tile.glb"
+dest_files=["res://.godot/imported/tri_grid_tile.glb-20ad72b0527e23eae9533cefc625d21e.scn"]
 
 [params]
 

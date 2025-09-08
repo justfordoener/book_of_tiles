@@ -1,18 +1,18 @@
 @tool
 extends Node
-# the hexagonal grid uses 
-# - flat top orientation
-# - an even-q layout
-# - cube coordinates for hexagon calculations
-# for reference use: https://www.redblobgames.com/grids/hexagons/#basics
+# - even-q layout
+# - cube coordinates for grid calculations
+# for reference use: https://www.redblobgames.com/grids/cube_coords/#basics
 
-class hexagon_cell:
+#TODO: make these childs of a cell class and put the state var there
+class dual_grid_cell:
 	var state : int  #bitwise superposition of cell states (63 = 111111)
-
-class triangle_cell:
+class tri_grid_cell:
+	var state : int
+class play_grid_cell:
 	var state : int
 
-var CELL_SIZE := 2
+var CELL_SIZE := 1 # length of a triangle edge
 var GRID_RADIUS := 15
 var GRID_HEIGHT := 0.5
 var CENTER_TILE_EUCLIDIC := Vector3(0,0,0)
@@ -33,45 +33,68 @@ var TILE_ROTATION_VALUE := {
 	120:  CUBIC_DIRECTION[4],	# facing bottom left
 	60:   CUBIC_DIRECTION[5]	# facing top left
 }
-var dual_grid_state = 0 # 0 = hexgrid, 1 = trigrid
+var grid_state = 0 # 0 = dualgrid, 1 = trigrid, 2 = playgrid
 
-var hexgrid = {} # in cube coords
-var trigrid = {} # in euclidic coords
+var dualgrid = {} # in cube coords
+var trigrid = {} # in euclidic coords #TODO make cubic
+var playgrid = {}
 
 func _ready() -> void:
 	initialize_grid()
-	print("init grid completed")
+	print("DEBUG: grid init completed")
 
 func initialize_grid() -> void:
-	#hexgrid
-	hexgrid[CENTER_TILE_CUBIC] = hexagon_cell.new()
+	#dualgrid
+	dualgrid[CENTER_TILE_CUBIC] = dual_grid_cell.new()
 	for ring in cubic_spiral(CENTER_TILE_CUBIC, GRID_RADIUS):
 		for pos in ring:
-			var new_cell = hexagon_cell.new()
+			var new_cell = dual_grid_cell.new()
 			new_cell.state = 0
-			hexgrid[pos] = new_cell
+			dualgrid[pos] = new_cell
 	
-	#trigrid
-	for point in hexgrid:
+	# trigrid
+	for point in dualgrid:
 		for direction in range(6):
-			var corner = get_euclicdic_hexagon_corner(cubic_to_euclidic(point), direction)
+			var corner = get_euclicdic_dual_corner(cubic_to_euclidic(point), direction)
 			if !trigrid.has(corner):
-				var new_cell = triangle_cell.new()
+				var new_cell = tri_grid_cell.new()
 				new_cell.state = 0
 				trigrid[corner] = new_cell
+				
+	# playgrid
 	
-# ------------------- draw functions --------------------
+# ------------------- grd mesh functions --------------------
+# ref: https://docs.godotengine.org/en/stable/tutorials/3d/procedural_geometry/arraymesh.html#doc-arraymesh
 
-func get_hexgrid_array_mesh() -> ArrayMesh:
-	var hexgrid_array_mesh : ArrayMesh = ArrayMesh.new()
+	#TODO make combined grid
+		# draw dots (play corners + centers)
+		# draw tri edges (between dots)
+		# draw dual grid (arround dots OR between tri centers)
+		
+func get_grid_dots() -> ArrayMesh:
+	var combined_grid_mesh : ArrayMesh = ArrayMesh.new()
 	var surface_array = []
 	surface_array.resize(Mesh.ARRAY_MAX)
 	var verts = PackedVector3Array()
 	var indices = PackedInt32Array()
-	for point in hexgrid:
+		
+	
+	surface_array[Mesh.ARRAY_VERTEX] = verts
+	surface_array[Mesh.ARRAY_INDEX] = indices
+	combined_grid_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
+	return combined_grid_mesh
+
+
+func get_dualgrid_array_mesh() -> ArrayMesh:
+	var dualgrid_array_mesh : ArrayMesh = ArrayMesh.new()
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	var verts = PackedVector3Array()
+	var indices = PackedInt32Array()
+	for point in dualgrid:
 		var corners = []
 		for direction in range(6):
-			corners.append(get_euclicdic_hexagon_corner(cubic_to_euclidic(point), direction))
+			corners.append(get_euclicdic_dual_corner(cubic_to_euclidic(point), direction))
 		verts.append_array(corners)
 		var base_index = verts.size() - 6
 		for direction in range(6):
@@ -79,8 +102,8 @@ func get_hexgrid_array_mesh() -> ArrayMesh:
 			indices.append(base_index + ((direction + 1) % 6))
 	surface_array[Mesh.ARRAY_VERTEX] = verts
 	surface_array[Mesh.ARRAY_INDEX] = indices
-	hexgrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
-	return hexgrid_array_mesh
+	dualgrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
+	return dualgrid_array_mesh
 
 func get_trigrid_array_mesh() -> ArrayMesh:
 	var trigrid_array_mesh : ArrayMesh = ArrayMesh.new()
@@ -88,7 +111,7 @@ func get_trigrid_array_mesh() -> ArrayMesh:
 	surface_array.resize(Mesh.ARRAY_MAX)
 	var verts = PackedVector3Array()
 	var indices = PackedInt32Array()
-	for point in hexgrid:
+	for point in dualgrid:
 		var corners = []
 		for index in range(CUBIC_DIRECTION.size()):
 			corners.append(cubic_to_euclidic(point+CUBIC_DIRECTION[index]))
@@ -104,28 +127,44 @@ func get_trigrid_array_mesh() -> ArrayMesh:
 	trigrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
 	return trigrid_array_mesh
 
+func get_playgrid_array_mesh() -> ArrayMesh:
+	var playgrid_array_mesh : ArrayMesh = ArrayMesh.new()
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	var verts = PackedVector3Array()
+	var indices = PackedInt32Array()
+	surface_array[Mesh.ARRAY_VERTEX] = verts
+	surface_array[Mesh.ARRAY_INDEX] = indices
+	playgrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
+	return playgrid_array_mesh
 
 # ------------------- helper functions -------------------
 
+func configure_grid_mesh(mesh : MeshInstance3D, color : Color) -> void:
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var material = ORMMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = color
+	mesh.material_override = material
 
-func euclidic_snap_to_hexgrid(point) -> Vector3:
+func euclidic_snap_to_dualgrid(point) -> Vector3:
 	var cube_coordinate_rounded : Vector3 = Grid.cubic_round(Grid.euclidic_to_cubic(point))
 	var point_new : Vector3 = Grid.cubic_to_euclidic(cube_coordinate_rounded)
 	return Vector3(point_new.x, point.y, point_new.z)
 	
 func euclidic_snap_to_trigrid(point : Vector3) -> Vector3:
-	var hexagon_center = euclidic_snap_to_hexgrid(point)
+	var dual_cell_center = euclidic_snap_to_dualgrid(point)
 	var min_dist = INF
 	var closest_corner : Vector3 = Vector3.ZERO
 	for direction in range(6):
-		var corner = get_euclicdic_hexagon_corner(hexagon_center, direction)
+		var corner = get_euclicdic_dual_corner(dual_cell_center, direction)
 		var dist = point.distance_to(corner)
 		if dist < min_dist:
 			closest_corner = corner
 			min_dist = dist
 	return closest_corner + Vector3(0, 0.5, 0)
 	
-func get_euclicdic_hexagon_corner(euclidic_center : Vector3, direction : int) -> Vector3:
+func get_euclicdic_dual_corner(euclidic_center : Vector3, direction : int) -> Vector3:
 	var angle_degree = 60 * direction + 30
 	var angle_radian = deg_to_rad(angle_degree)
 	return euclidic_center + Vector3(
@@ -134,7 +173,7 @@ func get_euclicdic_hexagon_corner(euclidic_center : Vector3, direction : int) ->
 		CELL_SIZE * sin(angle_radian)
 	)
 
-func get_cubic_hexagon_corner(cubic_center : Vector3, direction : int) -> Vector3:
+func get_cubic_dual_corner(cubic_center : Vector3, direction : int) -> Vector3:
 	return Vector3.ZERO
 	
 func cubic_distance_from_to(from: Vector3, to: Vector3):
@@ -145,26 +184,26 @@ func cubic_distance_from_to(from: Vector3, to: Vector3):
 	return distance
 
 func euclidic_to_cubic(point: Vector3):
-	var hexagon : Vector3 = Vector3.ZERO
-	hexagon.x = ( 2./3 * point.z) / CELL_SIZE
-	hexagon.y = (-1./3 * point.z + sqrt(3)/3 * point.x) / CELL_SIZE
-	hexagon.z = -hexagon.x-hexagon.y
-	return cubic_round(hexagon)
+	var cube_coord : Vector3 = Vector3.ZERO
+	cube_coord.x = ( 2./3 * point.z) / CELL_SIZE
+	cube_coord.y = (-1./3 * point.z + sqrt(3)/3 * point.x) / CELL_SIZE
+	cube_coord.z = -cube_coord.x-cube_coord.y
+	return cubic_round(cube_coord)
 	
-func cubic_to_euclidic(hexagon: Vector3):
+func cubic_to_euclidic(cube_coord: Vector3):
 	var point : Vector3 = Vector3.ZERO
-	point.x = CELL_SIZE * (sqrt(3)/2 * hexagon.x + sqrt(3) * hexagon.y)
+	point.x = CELL_SIZE * (sqrt(3)/2 * cube_coord.x + sqrt(3) * cube_coord.y)
 	point.y = 0
-	point.z = CELL_SIZE * 	   (3./2 * hexagon.x)
+	point.z = CELL_SIZE * 	   (3./2 * cube_coord.x)
 	return point
 
-func cubic_round(frac_hexagon: Vector3) -> Vector3:
-	var round_x = int(round(frac_hexagon.x))
-	var round_y = int(round(frac_hexagon.y))
-	var round_z = int(round(frac_hexagon.z))
-	var diff_x = abs(round_x - frac_hexagon.x)
-	var diff_y = abs(round_y - frac_hexagon.y)
-	var diff_z = abs(round_z - frac_hexagon.z)
+func cubic_round(frac_cube_coord: Vector3) -> Vector3:
+	var round_x = int(round(frac_cube_coord.x))
+	var round_y = int(round(frac_cube_coord.y))
+	var round_z = int(round(frac_cube_coord.z))
+	var diff_x = abs(round_x - frac_cube_coord.x)
+	var diff_y = abs(round_y - frac_cube_coord.y)
+	var diff_z = abs(round_z - frac_cube_coord.z)
 	if diff_x > diff_y and diff_x > diff_z:
 		round_x = -round_y-round_z
 	else: if diff_y > diff_z:
@@ -175,7 +214,7 @@ func cubic_round(frac_hexagon: Vector3) -> Vector3:
 
 func cubic_ring(center : Vector3, radius : int):
 	var results = []
-	var point = center + CUBIC_DIRECTION[4] * radius
+	var point = center + CUBIC_DIRECTION[4] * radius * CELL_SIZE
 	for i in range(6):
 		for j in range(radius):
 			results.append(point)
