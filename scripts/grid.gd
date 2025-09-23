@@ -66,10 +66,6 @@ func initialize_grid() -> void:
 # ------------------- grd mesh functions --------------------
 # ref: https://docs.godotengine.org/en/stable/tutorials/3d/procedural_geometry/arraymesh.html#doc-arraymesh
 
-	#TODO make combined grid
-		# draw dots (play corners + centers)
-		# draw tri edges (between dots)
-		# draw dual grid (arround dots OR between tri centers)
 		
 func get_grid_dots() -> ArrayMesh:
 	var combined_grid_mesh : ArrayMesh = ArrayMesh.new()
@@ -85,7 +81,7 @@ func get_grid_dots() -> ArrayMesh:
 	return combined_grid_mesh
 
 
-func get_dualgrid_array_mesh() -> ArrayMesh:
+func get_dual_layer_array_mesh() -> ArrayMesh:
 	var dualgrid_array_mesh : ArrayMesh = ArrayMesh.new()
 	var surface_array = []
 	surface_array.resize(Mesh.ARRAY_MAX)
@@ -105,7 +101,7 @@ func get_dualgrid_array_mesh() -> ArrayMesh:
 	dualgrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
 	return dualgrid_array_mesh
 
-func get_trigrid_array_mesh() -> ArrayMesh:
+func get_face_layer_array_mesh() -> ArrayMesh:
 	var trigrid_array_mesh : ArrayMesh = ArrayMesh.new()
 	var surface_array = []
 	surface_array.resize(Mesh.ARRAY_MAX)
@@ -127,7 +123,7 @@ func get_trigrid_array_mesh() -> ArrayMesh:
 	trigrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
 	return trigrid_array_mesh
 
-func get_playgrid_array_mesh() -> ArrayMesh:
+func get_play_layer_array_mesh() -> ArrayMesh:
 	var playgrid_array_mesh : ArrayMesh = ArrayMesh.new()
 	var surface_array = []
 	surface_array.resize(Mesh.ARRAY_MAX)
@@ -147,7 +143,7 @@ func configure_grid_mesh(mesh : MeshInstance3D, color : Color) -> void:
 	material.albedo_color = color
 	mesh.material_override = material
 
-func euclidic_snap_to_dualgrid(point) -> Vector3:
+func euclidic_snap_to_dualgrid(point : Vector3) -> Vector3:
 	var cube_coordinate_rounded : Vector3 = Grid.cubic_round(Grid.euclidic_to_cubic(point))
 	var point_new : Vector3 = Grid.cubic_to_euclidic(cube_coordinate_rounded)
 	return Vector3(point_new.x, point.y, point_new.z)
