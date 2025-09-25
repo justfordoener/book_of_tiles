@@ -12,11 +12,14 @@ var current_module
 func _ready():
 	pass
 
-func build_layer():
+func build_layer_mesh():
+	pass
+	
+func show_layer_mesh():
 	pass
 
-func activate_layer():
-	print_debug("abstract init grid")
+func activate_layer_snapping():
+	print_debug("activated_abstract_layer_snapping")
 	pass
 	
 func snap_to_layer(point : Vector3) -> Vector3:

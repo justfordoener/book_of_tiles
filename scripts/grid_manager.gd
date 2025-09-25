@@ -1,10 +1,10 @@
 extends Node
 
-@onready var play_layer = $abstract_grid/play_layer
-@onready var dual_layer = $abstract_grid/dual_layer
-@onready var face_layer = $abstract_grid/face_layer
-@onready var edge_layer = $abstract_grid/edge_layer
-@onready var corn_layer = $abstract_grid/corn_layer
+@onready var play_layer = $grid_layers/play_layer
+@onready var dual_layer = $grid_layers/dual_layer
+@onready var face_layer = $grid_layers/face_layer
+@onready var edge_layer = $grid_layers/edge_layer
+@onready var corn_layer = $grid_layers/corn_layer
 
 @export var play_module : PackedScene
 @export var dual_module : PackedScene
@@ -20,6 +20,7 @@ var camera : Camera3D
 
 func _ready():
 	_init_grid()
+	_create_preview_instance()
 
 func _init_grid():
 	active_module = play_module
@@ -34,8 +35,8 @@ func _process(_delta):
 	var ray_origin = camera.project_ray_origin(mouse_pos)
 	var ray_dir = camera.project_ray_normal(mouse_pos)
 	var plane = Plane(Vector3.UP, 0)
-	var hit : Vector3 = plane.intersects_ray(ray_origin, ray_dir)
 	preview_instance.visible = not _is_mouse_over_ui_rect(mouse_pos)
+	var hit = plane.intersects_ray(ray_origin, ray_dir)
 	if hit != null:
 		preview_instance.global_position = active_layer.snap_to_layer(hit)
 		if Input.is_action_just_pressed("mouse_wheel_down"):
