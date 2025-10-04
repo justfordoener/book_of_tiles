@@ -4,9 +4,11 @@ func _ready():
 	build_layer_mesh()
 
 func build_layer_mesh():
+	#TODO
 	pass
 	
-func show_layer_mesh():
+func show_layer_mesh(value : bool):
+	print_debug("show_play_layer_mesh not implemented yet. value: ", value) #TODO
 	pass
 	
 func activate_layer_snapping():

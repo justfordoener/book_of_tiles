@@ -7,7 +7,8 @@ class_name GridLayer extends Node3D
 @export var CORN_LAYER_COLOR := Color.YELLOW
 
 var layer_color = Color.BLACK
-var current_module
+var layer_mesh : ArrayMesh
+var current_module : PackedScene
 
 func _ready():
 	pass
@@ -15,7 +16,8 @@ func _ready():
 func build_layer_mesh():
 	pass
 	
-func show_layer_mesh():
+func show_layer_mesh(value : bool):
+	print_debug("show_abstract_layer_mesh. value: ", value)
 	pass
 
 func activate_layer_snapping():

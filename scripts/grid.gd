@@ -35,51 +35,36 @@ var TILE_ROTATION_VALUE := {
 }
 var grid_state = 0 # 0 = dualgrid, 1 = trigrid, 2 = playgrid
 
-var dualgrid = {} # in cube coords
-var trigrid = {} # in euclidic coords #TODO make cubic
-var playgrid = {}
+var dual_layer_snap_points = {} # in cube coords
+var face_layer_snap_points = {} # in euclidic coords #TODO make cubic
+var play_layer_snap_points = {}
 
 func _ready() -> void:
 	initialize_grid()
 	print("DEBUG: grid init completed")
 
 func initialize_grid() -> void:
-	#dualgrid
-	dualgrid[CENTER_TILE_CUBIC] = dual_grid_cell.new()
+	# dual layer
+	dual_layer_snap_points[CENTER_TILE_CUBIC] = dual_grid_cell.new()
 	for ring in cubic_spiral(CENTER_TILE_CUBIC, GRID_RADIUS):
 		for pos in ring:
 			var new_cell = dual_grid_cell.new()
 			new_cell.state = 0
-			dualgrid[pos] = new_cell
+			dual_layer_snap_points[pos] = new_cell
 	
-	# trigrid
-	for point in dualgrid:
+	# face layer
+	for point in dual_layer_snap_points:
 		for direction in range(6):
 			var corner = get_euclicdic_dual_corner(cubic_to_euclidic(point), direction)
-			if !trigrid.has(corner):
+			if !face_layer_snap_points.has(corner):
 				var new_cell = tri_grid_cell.new()
 				new_cell.state = 0
-				trigrid[corner] = new_cell
+				face_layer_snap_points[corner] = new_cell
 				
-	# playgrid
+	# play layer
 	
-# ------------------- grd mesh functions --------------------
+# ------------------- grid mesh functions --------------------
 # ref: https://docs.godotengine.org/en/stable/tutorials/3d/procedural_geometry/arraymesh.html#doc-arraymesh
-
-		
-func get_grid_dots() -> ArrayMesh:
-	var combined_grid_mesh : ArrayMesh = ArrayMesh.new()
-	var surface_array = []
-	surface_array.resize(Mesh.ARRAY_MAX)
-	var verts = PackedVector3Array()
-	var indices = PackedInt32Array()
-		
-	
-	surface_array[Mesh.ARRAY_VERTEX] = verts
-	surface_array[Mesh.ARRAY_INDEX] = indices
-	combined_grid_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
-	return combined_grid_mesh
-
 
 func get_dual_layer_array_mesh() -> ArrayMesh:
 	var dualgrid_array_mesh : ArrayMesh = ArrayMesh.new()
@@ -87,7 +72,7 @@ func get_dual_layer_array_mesh() -> ArrayMesh:
 	surface_array.resize(Mesh.ARRAY_MAX)
 	var verts = PackedVector3Array()
 	var indices = PackedInt32Array()
-	for point in dualgrid:
+	for point in dual_layer_snap_points:
 		var corners = []
 		for direction in range(6):
 			corners.append(get_euclicdic_dual_corner(cubic_to_euclidic(point), direction))
@@ -107,7 +92,7 @@ func get_face_layer_array_mesh() -> ArrayMesh:
 	surface_array.resize(Mesh.ARRAY_MAX)
 	var verts = PackedVector3Array()
 	var indices = PackedInt32Array()
-	for point in dualgrid:
+	for point in dual_layer_snap_points:
 		var corners = []
 		for index in range(CUBIC_DIRECTION.size()):
 			corners.append(cubic_to_euclidic(point+CUBIC_DIRECTION[index]))
@@ -129,6 +114,7 @@ func get_play_layer_array_mesh() -> ArrayMesh:
 	surface_array.resize(Mesh.ARRAY_MAX)
 	var verts = PackedVector3Array()
 	var indices = PackedInt32Array()
+	#TODO
 	surface_array[Mesh.ARRAY_VERTEX] = verts
 	surface_array[Mesh.ARRAY_INDEX] = indices
 	playgrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
@@ -169,9 +155,6 @@ func get_euclicdic_dual_corner(euclidic_center : Vector3, direction : int) -> Ve
 		CELL_SIZE * sin(angle_radian)
 	)
 
-func get_cubic_dual_corner(cubic_center : Vector3, direction : int) -> Vector3:
-	return Vector3.ZERO
-	
 func cubic_distance_from_to(from: Vector3, to: Vector3):
 	var distance : Vector3 = Vector3.ZERO
 	distance.x = to.x - from.x
