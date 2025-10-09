@@ -17,4 +17,4 @@ func activate_layer_snapping():
 	layer_color = FACE_LAYER_COLOR
 
 func snap_to_layer(point : Vector3) -> Vector3:
-	return Grid.euclidic_snap_to_trigrid(point)
+	return Grid.snap_to_face_layer(point)

@@ -9,13 +9,17 @@ extends Node
 @onready var grid_layers = {
 	"play_layer" : $grid_layers/play_layer,
 	"dual_layer" : $grid_layers/dual_layer,
-	"face_layer" : $grid_layers/face_layer
+	"face_layer" : $grid_layers/face_layer,
+	"edge_layer" : $grid_layers/edge_layer,
+	"corn_layer" : $grid_layers/corn_layer
 }
 
 @onready var layer_modules = {
 	"play_layer" : play_module,
 	"dual_layer" : dual_module,
-	"face_layer" : face_module
+	"face_layer" : face_module,
+	"edge_layer" : edge_module,
+	"corn_layer" : corn_module
 }
 
 @export var play_module : PackedScene
@@ -31,6 +35,7 @@ var camera : Camera3D
 
 func _ready():
 	camera = get_node(camera_path) as Camera3D
+	set_process(false)
 
 func _create_preview_instance():
 	if !active_layer.current_module:
@@ -70,6 +75,11 @@ func _spawn_instance(position: Vector3, rotation : float):
 		push_warning("active_module is not assigned.")
 		return
 	var instance = active_layer.current_module.instantiate()
+	var material := StandardMaterial3D.new()
+	material.albedo_color = active_layer.layer_color
+	for child in instance.get_children():
+		if child is MeshInstance3D:
+			child.material_override = material
 	get_tree().current_scene.add_child(instance)
 	instance.global_position = position
 	instance.global_rotation.y = rotation
@@ -84,4 +94,4 @@ func set_active_layer(layer_key : String):
 	active_layer.show_layer_mesh(true)
 	active_layer.activate_layer_snapping()
 	_create_preview_instance()
-	print_debug("layer module: ", layer_modules[layer_key], "  active layer: ", active_layer, "  preview_instance: ", preview_instance)
+	set_process(true)

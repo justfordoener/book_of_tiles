@@ -17,4 +17,4 @@ func activate_layer_snapping():
 	layer_color = DUAL_LAYER_COLOR
 
 func snap_to_layer(point : Vector3) -> Vector3:
-	return Grid.euclidic_snap_to_dualgrid(point)
+	return Grid.snap_to_dual_layer(point)

@@ -5,11 +5,15 @@ extends Node
 # for reference use: https://www.redblobgames.com/grids/cube_coords/#basics
 
 #TODO: make these childs of a cell class and put the state var there
-class dual_grid_cell:
-	var state : int  #bitwise superposition of cell states (63 = 111111)
-class tri_grid_cell:
+class play_cell:
 	var state : int
-class play_grid_cell:
+class dual_cell:
+	var state : int  #bitwise superposition of cell states (63 = 111111)?????
+class face_cell:
+	var state : int
+class edge_cell:
+	var state : int
+class corn_cell:
 	var state : int
 
 var CELL_SIZE := 1 # length of a triangle edge
@@ -35,20 +39,20 @@ var TILE_ROTATION_VALUE := {
 }
 var grid_state = 0 # 0 = dualgrid, 1 = trigrid, 2 = playgrid
 
-var dual_layer_snap_points = {} # in cube coords
-var face_layer_snap_points = {} # in euclidic coords #TODO make cubic
+var dual_layer_snap_points = {} 
+var face_layer_snap_points = {} 
 var play_layer_snap_points = {}
+var corn_layer_snap_points = {}
 
 func _ready() -> void:
-	initialize_grid()
-	print("DEBUG: grid init completed")
+	initialize_grid_layers()
 
-func initialize_grid() -> void:
+func initialize_grid_layers() -> void:
 	# dual layer
-	dual_layer_snap_points[CENTER_TILE_CUBIC] = dual_grid_cell.new()
+	dual_layer_snap_points[CENTER_TILE_CUBIC] = dual_cell.new()
 	for ring in cubic_spiral(CENTER_TILE_CUBIC, GRID_RADIUS):
 		for pos in ring:
-			var new_cell = dual_grid_cell.new()
+			var new_cell = dual_cell.new()
 			new_cell.state = 0
 			dual_layer_snap_points[pos] = new_cell
 	
@@ -57,10 +61,18 @@ func initialize_grid() -> void:
 		for direction in range(6):
 			var corner = get_euclicdic_dual_corner(cubic_to_euclidic(point), direction)
 			if !face_layer_snap_points.has(corner):
-				var new_cell = tri_grid_cell.new()
+				var new_cell = face_cell.new()
 				new_cell.state = 0
 				face_layer_snap_points[corner] = new_cell
 				
+	# edge layer #TODO
+	
+	# corn layer
+	for point in dual_layer_snap_points:
+		var new_cell = corn_cell.new()
+		new_cell.state = 0
+		corn_layer_snap_points[point] = new_cell
+	
 	# play layer
 	
 # ------------------- grid mesh functions --------------------
@@ -120,6 +132,54 @@ func get_play_layer_array_mesh() -> ArrayMesh:
 	playgrid_array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
 	return playgrid_array_mesh
 
+# ------------------- snap to grid layer -----------------
+	
+func snap_to_dual_layer(point : Vector3) -> Vector3:
+	var cube_coordinate_rounded : Vector3 = Grid.cubic_round(Grid.euclidic_to_cubic(point))
+	var point_new : Vector3 = Grid.cubic_to_euclidic(cube_coordinate_rounded)
+	return Vector3(point_new.x, point.y, point_new.z)
+
+func snap_to_face_layer(point : Vector3) -> Vector3:
+	var dual_cell_center = snap_to_dual_layer(point)
+	var min_dist = INF
+	var closest_corner : Vector3 = Vector3.ZERO
+	for direction in range(6):
+		var corner = get_euclicdic_dual_corner(dual_cell_center, direction)
+		var dist = point.distance_to(corner)
+		if dist < min_dist:
+			closest_corner = corner
+			min_dist = dist
+	return closest_corner
+	
+func snap_to_edge_layer(point : Vector3) -> Vector3:
+	# get 2 closest dual points
+	var closest_dual : Vector3 = snap_to_dual_layer(point)
+	var second_dual : Vector3 = Vector3.ZERO
+	var min_dist = INF
+	# get second dual by adding vectors of two closest corners
+	var closest_corner : Vector3 = Vector3.ZERO
+	var second_corner : Vector3 = Vector3.ZERO
+	for direction in range(6):
+		var corner = get_euclicdic_dual_corner(closest_dual, direction)
+		var dist = point.distance_to(corner)
+		if dist < min_dist:
+			closest_corner = corner
+			min_dist = dist
+	var max_dist = INF
+	for direction in range(6):
+		var corner = get_euclicdic_dual_corner(closest_dual, direction)
+		var dist = point.distance_to(corner)
+		if dist > min_dist and dist < max_dist:
+			second_corner = corner
+			max_dist = dist
+	var closest_dual_euc = cubic_to_euclidic(closest_dual)
+	second_dual = closest_dual_euc + (closest_corner - closest_dual_euc) + (second_corner - closest_dual_euc)
+	# return point between those duals
+	return closest_dual_euc + 0.5 * (second_dual - closest_dual_euc)	
+	
+func snap_to_corn_layer(point : Vector3) -> Vector3:
+	return snap_to_dual_layer(point)
+
 # ------------------- helper functions -------------------
 
 func configure_grid_mesh(mesh : MeshInstance3D, color : Color) -> void:
@@ -129,23 +189,6 @@ func configure_grid_mesh(mesh : MeshInstance3D, color : Color) -> void:
 	material.albedo_color = color
 	mesh.material_override = material
 
-func euclidic_snap_to_dualgrid(point : Vector3) -> Vector3:
-	var cube_coordinate_rounded : Vector3 = Grid.cubic_round(Grid.euclidic_to_cubic(point))
-	var point_new : Vector3 = Grid.cubic_to_euclidic(cube_coordinate_rounded)
-	return Vector3(point_new.x, point.y, point_new.z)
-	
-func euclidic_snap_to_trigrid(point : Vector3) -> Vector3:
-	var dual_cell_center = euclidic_snap_to_dualgrid(point)
-	var min_dist = INF
-	var closest_corner : Vector3 = Vector3.ZERO
-	for direction in range(6):
-		var corner = get_euclicdic_dual_corner(dual_cell_center, direction)
-		var dist = point.distance_to(corner)
-		if dist < min_dist:
-			closest_corner = corner
-			min_dist = dist
-	return closest_corner + Vector3(0, 0.5, 0)
-	
 func get_euclicdic_dual_corner(euclidic_center : Vector3, direction : int) -> Vector3:
 	var angle_degree = 60 * direction + 30
 	var angle_radian = deg_to_rad(angle_degree)
